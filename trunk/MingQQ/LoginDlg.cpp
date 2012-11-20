@@ -23,13 +23,6 @@ BOOL CLoginDlg::OnInitDialog(CWindow wndFocus, LPARAM lInitParam)
 	m_hDlgSmallIcon = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR, ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON));
 	SetIcon(m_hDlgSmallIcon, FALSE);
 
-	CWindow ctrl;
-	ctrl = GetDlgItem(ID_EDIT_USER);
-	ctrl.SetWindowText(_T("847708268"));
-
-	ctrl = GetDlgItem(ID_EDIT_PWD);
-	ctrl.SetWindowText(_T("testtest"));
-
 	CComboBox cboStatus = GetDlgItem(ID_COMBO_STATUS);
 	cboStatus.AddString(_T("我在线上"));
 	cboStatus.AddString(_T("Q我吧"));
