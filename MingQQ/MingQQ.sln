@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MingQQ", "MingQQ\MingQQ.vcproj", "{4FCA0368-040C-4CF9-8E0E-3CD4F6786972}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MsgLogBrowser", "MsgLogBrowser\MsgLogBrowser.vcproj", "{E98500F4-208A-4EE1-8471-FAA6094CC728}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -15,10 +13,6 @@ Global
 		{4FCA0368-040C-4CF9-8E0E-3CD4F6786972}.Debug|Win32.Build.0 = Debug|Win32
 		{4FCA0368-040C-4CF9-8E0E-3CD4F6786972}.Release|Win32.ActiveCfg = Release|Win32
 		{4FCA0368-040C-4CF9-8E0E-3CD4F6786972}.Release|Win32.Build.0 = Release|Win32
-		{E98500F4-208A-4EE1-8471-FAA6094CC728}.Debug|Win32.ActiveCfg = Debug|Win32
-		{E98500F4-208A-4EE1-8471-FAA6094CC728}.Debug|Win32.Build.0 = Debug|Win32
-		{E98500F4-208A-4EE1-8471-FAA6094CC728}.Release|Win32.ActiveCfg = Release|Win32
-		{E98500F4-208A-4EE1-8471-FAA6094CC728}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
