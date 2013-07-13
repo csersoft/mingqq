@@ -52,13 +52,6 @@ BOOL CBuddyChatDlg::PreTranslateMessage(MSG* pMsg)
 			if (OnRichEdit_RBtnDown(pMsg))
 				return TRUE;
 		}
-
-		if ((pMsg->hwnd == m_richSend.m_hWnd) && (pMsg->message == WM_KEYDOWN) 
-			&& (pMsg->wParam == 'V') && (pMsg->lParam & VK_CONTROL))	// 发送文本框的Ctrl+V消息
-		{
-			m_richSend.PasteSpecial(CF_TEXT);
-			return TRUE;
-		}
 	}
 
 	return CWindow::IsDialogMessage(pMsg);
