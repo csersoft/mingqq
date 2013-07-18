@@ -1734,44 +1734,68 @@ BOOL CQQProtocol::CalcPwdHash(LPCTSTR lpQQPwd, LPCTSTR lpVerifyCode,
 	return TRUE;
 }
 
+//// 计算获取好友列表的hash参数
+//std::string CQQProtocol::CalcBuddyListHash(UINT nQQUin, const std::string &strPtWebQq)
+//{
+//	std::string a = strPtWebQq;
+//	a += "password error";
+//
+//	CHAR szQQUin[32] = {0};
+//	sprintf(szQQUin, "%u", nQQUin);
+//
+//	std::string s;
+//	while ( true )
+//	{
+//		if ( s.length() < a.length() )
+//		{
+//			s += szQQUin;
+//			if ( s.length() == a.length() )
+//				break;
+//		}
+//		else
+//		{
+//			s = s.substr(0, a.length());
+//			break;
+//		}
+//	}
+//
+//	std::string j;
+//	for ( int i = 0; i < (int)s.length(); ++i )
+//	{
+//		j.push_back(s[i] ^ a[i]);
+//	}
+//
+//	std::string key = "0123456789ABCDEF";
+//
+//	s.clear();
+//	for ( int i = 0; i < (int)a.length(); ++i )
+//	{
+//		s.push_back(key[j[i] >> 4 & 15]);
+//		s.push_back(key[j[i] & 15]);
+//	}
+//	return s;
+//}
+
 // 计算获取好友列表的hash参数
 std::string CQQProtocol::CalcBuddyListHash(UINT nQQUin, const std::string &strPtWebQq)
 {
-	std::string a = strPtWebQq;
-	a += "password error";
-
-	CHAR szQQUin[32] = {0};
-	sprintf(szQQUin, "%u", nQQUin);
-
-	std::string s;
-	while ( true )
+	UINT buffer[4] = {0};
+	for (int i = 0; i < (int)strPtWebQq.size(); i++)
+		buffer[i % 4] ^= strPtWebQq[i];
+	UINT d[4] = {0};
+	d[0] = nQQUin >> 24 & 255 ^ 'E';
+	d[1] = nQQUin >> 16 & 255 ^ 'C';
+	d[2] = nQQUin >> 8 & 255 ^ 'O';
+	d[3] = nQQUin & 255 ^ 'K';
+	UINT j2[8] = {0};
+	for (int i = 0; i < 8; i++)
+		j2[i] = i % 2 == 0 ? buffer[i >> 1] : d[i >> 1];
+	char sb[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+	std::string str;
+	for (int s = 0; s < 8; s++)
 	{
-		if ( s.length() < a.length() )
-		{
-			s += szQQUin;
-			if ( s.length() == a.length() )
-				break;
-		}
-		else
-		{
-			s = s.substr(0, a.length());
-			break;
-		}
+		str += sb[j2[s] >> 4 & 15];
+		str += sb[j2[s] & 15];
 	}
-
-	std::string j;
-	for ( int i = 0; i < (int)s.length(); ++i )
-	{
-		j.push_back(s[i] ^ a[i]);
-	}
-
-	std::string key = "0123456789ABCDEF";
-
-	s.clear();
-	for ( int i = 0; i < (int)a.length(); ++i )
-	{
-		s.push_back(key[j[i] >> 4 & 15]);
-		s.push_back(key[j[i] & 15]);
-	}
-	return s;
+	return str;
 }
