@@ -58,6 +58,7 @@ void CMessageLogger::SetMsgLogFileName(LPCTSTR lpszFileName)
 
 	tstring strMutexName = m_strFileName;
 	this->Replace(strMutexName, _T("\\"), _T(""));
+	this->Replace(strMutexName, _T("/"), _T(""));
 
 	m_hMutex = ::OpenMutex(MUTEX_ALL_ACCESS, FALSE, strMutexName.c_str());
 	if (NULL == m_hMutex)
