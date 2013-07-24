@@ -1776,26 +1776,66 @@ BOOL CQQProtocol::CalcPwdHash(LPCTSTR lpQQPwd, LPCTSTR lpVerifyCode,
 //	return s;
 //}
 
+//// 计算获取好友列表的hash参数
+// std::string CQQProtocol::CalcBuddyListHash(UINT nQQUin, const std::string &strPtWebQq)
+// {
+// 	UINT buffer[4] = {0};
+// 	for (int i = 0; i < (int)strPtWebQq.size(); i++)
+// 		buffer[i % 4] ^= strPtWebQq[i];
+// 	UINT d[4] = {0};
+// 	d[0] = nQQUin >> 24 & 255 ^ 'E';
+// 	d[1] = nQQUin >> 16 & 255 ^ 'C';
+// 	d[2] = nQQUin >> 8 & 255 ^ 'O';
+// 	d[3] = nQQUin & 255 ^ 'K';
+// 	UINT j2[8] = {0};
+// 	for (int i = 0; i < 8; i++)
+// 		j2[i] = i % 2 == 0 ? buffer[i >> 1] : d[i >> 1];
+// 	char sb[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+// 	std::string str;
+// 	for (int s = 0; s < 8; s++)
+// 	{
+// 		str += sb[j2[s] >> 4 & 15];
+// 		str += sb[j2[s] & 15];
+// 	}
+// 	return str;
+// }
+
 // 计算获取好友列表的hash参数
 std::string CQQProtocol::CalcBuddyListHash(UINT nQQUin, const std::string &strPtWebQq)
 {
-	UINT buffer[4] = {0};
-	for (int i = 0; i < (int)strPtWebQq.size(); i++)
-		buffer[i % 4] ^= strPtWebQq[i];
-	UINT d[4] = {0};
-	d[0] = nQQUin >> 24 & 255 ^ 'E';
-	d[1] = nQQUin >> 16 & 255 ^ 'C';
-	d[2] = nQQUin >> 8 & 255 ^ 'O';
-	d[3] = nQQUin & 255 ^ 'K';
-	UINT j2[8] = {0};
-	for (int i = 0; i < 8; i++)
-		j2[i] = i % 2 == 0 ? buffer[i >> 1] : d[i >> 1];
-	char sb[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-	std::string str;
-	for (int s = 0; s < 8; s++)
+	char szQQUin[32] = {0};
+	sprintf(szQQUin, "%u", nQQUin);
+
+	int nQQUinLen = strlen(szQQUin);
+	int nPtWebQqLen = (int)strPtWebQq.size();
+
+	UINT d = -1;
+	for (int j = 0, s = 0; s < nQQUinLen; s++)
 	{
-		str += sb[j2[s] >> 4 & 15];
-		str += sb[j2[s] & 15];
+		j += (szQQUin[s]-'0');
+		j %= nPtWebQqLen;
+		UINT c = 0;
+		if (j + 4 > nPtWebQqLen)
+			for (int l = 4 + j - nPtWebQqLen, x = 0; x < 4; x++)
+				c |= x < l ? (strPtWebQq[j + x] & 255) << (3 - x) * 8 : (strPtWebQq[x - l] & 255) << (3 - x) * 8;
+		else
+			for (int x = 0; x < 4; x++) 
+				c |= (strPtWebQq[j + x] & 255) << (3 - x) * 8; 
+		d ^= c;
 	}
-	return str;
+
+	UINT a[4] = {0};
+	a[0] = d >> 24 & 255;
+	a[1] = d >> 16 & 255;
+	a[2] = d >> 8 & 255;
+	a[3] = d & 255;
+
+	std::string strHash;
+	char szHexStr[] = "0123456789ABCDEF";
+	for (int j = 0; j < 4; j++)
+	{
+		strHash += szHexStr[a[j] >> 4 & 15];
+		strHash += szHexStr[a[j] & 15];
+	}
+	return strHash;
 }
