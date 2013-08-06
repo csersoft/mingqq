@@ -103,6 +103,8 @@ void CVerifyCodeInfo::Reset()
 	m_nNeedVerify = 0;
 	m_strVerifyCode = _T("");
 	m_strVCType = _T("");
+	m_nPtUinLen = sizeof(m_cPtUin) / sizeof(CHAR);
+	memset(m_cPtUin, 0, m_nPtUinLen);
 }
 
 BOOL CVerifyCodeInfo::Parse(CBuffer * lpBuf)
@@ -163,6 +165,7 @@ BOOL CVerifyCodeInfo::Parse(CBuffer * lpBuf)
 	}
 
 	m_nPtUinLen = sizeof(m_cPtUin) / sizeof(CHAR);
+	memset(m_cPtUin, 0, m_nPtUinLen);
 	return ParsePtUin(strTemp3.c_str(), m_cPtUin, m_nPtUinLen);
 }
 
@@ -222,7 +225,9 @@ CLoginResult_1::~CLoginResult_1(void)
 void CLoginResult_1::Reset()
 {
 	m_nRetCode = 0;
+	m_strCheckSigUrl = _T("");
 	m_strMsg = _T("");
+	m_strNickName = _T("");
 	m_strPtWebQq = _T("");
 	m_strSKey = _T("");
 }
@@ -239,15 +244,17 @@ BOOL CLoginResult_1::Parse(CBuffer * lpBuf, std::vector<tstring>* arrRespHeader)
 	if (NULL == lpRespDataW)
 		return FALSE;
 
-	LPCTSTR lpFmt = _T("ptuiCB('%d',%*[^,],%*[^,],%*[^,],'%[^']');");
+	LPCTSTR lpFmt = _T("ptuiCB('%d',%*[^,],'%[^']',%*[^,],'%[^']', '%[^']');");
 	int nRetCode = -1;
-	TCHAR cMsg[1024] = {0};
+	TCHAR cCheckSigUrl[3072] = {0}, cMsg[512] = {0}, cNickName[64] = {0};
 
-	_stscanf(lpRespDataW, lpFmt, &nRetCode, cMsg);
+	_stscanf(lpRespDataW, lpFmt, &nRetCode, cCheckSigUrl, cMsg, cNickName);
 	delete []lpRespDataW;
 
 	m_nRetCode = nRetCode;
+	m_strCheckSigUrl = cCheckSigUrl;
 	m_strMsg = cMsg;
+	m_strNickName = cNickName;
 
 //	HTTP/1.1 200 OK
 //	Date: Tue, 26 Mar 2013 04:08:43 GMT

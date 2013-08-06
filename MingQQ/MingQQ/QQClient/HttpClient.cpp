@@ -115,6 +115,8 @@ BOOL CHttpClient::OpenRequest(LPCTSTR lpszUrl, HTTP_REQ_METHOD nReqMethod/* = RE
 		lpMethod = _T("POST");
 
 	DWORD dwFlags = INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE;
+	if (INTERNET_DEFAULT_HTTPS_PORT == nPort)
+		dwFlags |= INTERNET_FLAG_SECURE;
 
 	m_dwContext = REQUEST_OPENED_EVENT;
 	m_hRequest = ::HttpOpenRequest(m_hConnect, lpMethod, szUrlPath, 

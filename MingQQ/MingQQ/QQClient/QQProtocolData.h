@@ -164,7 +164,7 @@ public:
 
 public:
 	int m_nRetCode;
-	tstring m_strMsg;
+	tstring m_strCheckSigUrl, m_strMsg, m_strNickName;
 	tstring m_strPtWebQq;
 	tstring m_strSKey;
 };
