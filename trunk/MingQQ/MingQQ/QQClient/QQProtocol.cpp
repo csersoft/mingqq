@@ -15,8 +15,8 @@ CQQProtocol::~CQQProtocol(void)
 BOOL CQQProtocol::CheckVerifyCode(CHttpClient& HttpClient, LPCTSTR lpQQNum, 
 								  LPCTSTR lpAppId, CVerifyCodeInfo * lpVCInfo)
 {
-	LPCTSTR lpszReqHeaders = _T("Accept: */*\r\nReferer: https://ui.ptlogin2.qq.com/cgi-bin/login?target=self&style=5&mibao_css=m_webqq&appid=1003903&enable_qlogin=0&no_verifyimg=1&s_url=http%3A%2F%2Fweb.qq.com%2Floginproxy.html&f_url=loginerroralert&strong_login=1&login_state=10&t=20130417001\r\nAccept-Language: zh-cn\r\n");
-	LPCTSTR lpFmt = _T("http://check.ptlogin2.qq.com/check?uin=%s&appid=%s&r=0.23017793586962337");
+	LPCTSTR lpszReqHeaders = _T("Accept: */*\r\nReferer: https://ui.ptlogin2.qq.com/cgi-bin/login?daid=164&target=self&style=5&mibao_css=m_webqq&appid=1003903&enable_qlogin=0&no_verifyimg=1&s_url=http%3A%2F%2Fweb2.qq.com%2Floginproxy.html&f_url=loginerroralert&strong_login=1&login_state=10&t=20130723001\r\nAccept-Language: zh-cn\r\n");
+	LPCTSTR lpFmt = _T("https://ssl.ptlogin2.qq.com/check?uin=%s&appid=%s&js_ver=10038&js_type=0&login_sig=P9011ArgB3ImUQV*BfKuftIu9o3lGeuIoBVBi*WjElOnOl2OzVIzg3gHjE0KJ9e3&u1=http%%3A%%2F%%2Fweb2.qq.com%%2Floginproxy.html&r=0.1790402590984438");
 	TCHAR szUrl[MAX_URL_LEN] = {0};
 	DWORD dwRespCode;
 	CBuffer RespData;
@@ -42,8 +42,8 @@ BOOL CQQProtocol::CheckVerifyCode(CHttpClient& HttpClient, LPCTSTR lpQQNum,
 BOOL CQQProtocol::GetVerifyCodePic(CHttpClient& HttpClient, LPCTSTR lpAppId, 
 								   LPCTSTR lpQQNum, LPCTSTR lpVCType, CBuffer * lpVerifyCodePic)
 {
-	LPCTSTR lpszReqHeaders = _T("Accept: */*\r\nReferer: http://ui.ptlogin2.qq.com/cgi-bin/login?target=self&style=5&mibao_css=m_webqq&appid=1003903&enable_qlogin=0&no_verifyimg=1&s_url=http%3A%2F%2Fweb.qq.com%2Floginproxy.html&f_url=loginerroralert&strong_login=1&login_state=10&t=20120201001\r\nAccept-Language: zh-cn\r\n");
-	LPCTSTR lpFmt = _T("http://captcha.qq.com/getimage?aid=%s&uin=%s&vc_type=%s");
+	LPCTSTR lpszReqHeaders = _T("Accept: */*\r\nReferer: https://ui.ptlogin2.qq.com/cgi-bin/login?daid=164&target=self&style=5&mibao_css=m_webqq&appid=1003903&enable_qlogin=0&no_verifyimg=1&s_url=http%3A%2F%2Fweb2.qq.com%2Floginproxy.html&f_url=loginerroralert&strong_login=1&login_state=10&t=20130723001\r\nAccept-Language: zh-cn\r\n");
+	LPCTSTR lpFmt = _T("https://ssl.captcha.qq.com/getimage?aid=%s&r=0.43951176664325314&uin=%s");
 	TCHAR szUrl[MAX_URL_LEN] = {0};
 	DWORD dwRespCode;
 	CBuffer RespData;
@@ -53,7 +53,7 @@ BOOL CQQProtocol::GetVerifyCodePic(CHttpClient& HttpClient, LPCTSTR lpAppId,
 		|| NULL == lpVCType || NULL == lpVerifyCodePic)
 		return FALSE;
 
-	wsprintf(szUrl, lpFmt, lpAppId, lpQQNum, lpVCType);
+	wsprintf(szUrl, lpFmt, lpAppId, lpQQNum);
 
 	bRet = HttpGet(HttpClient, szUrl, lpszReqHeaders, dwRespCode, NULL, RespData);
 	if (!bRet || dwRespCode != 200)
@@ -72,11 +72,16 @@ BOOL CQQProtocol::Login1(CHttpClient& HttpClient, LPCTSTR lpQQNum, LPCTSTR lpQQP
 						 LPCTSTR lpVerifyCode, const CHAR * lpPtUin, int nPtUin, 
 						 LPCTSTR lpAppId, CLoginResult_1 * lpLoginResult1)
 {
-	LPCTSTR lpszReqHeaders = _T("Accept: */*\r\nReferer: http://ui.ptlogin2.qq.com/cgi-bin/login?target=self&style=5&mibao_css=m_webqq&appid=1003903&enable_qlogin=0&no_verifyimg=1&s_url=http%3A%2F%2Fweb.qq.com%2Floginproxy.html&f_url=loginerroralert&strong_login=1&login_state=10&t=20120504001\r\nAccept-Language: zh-cn\r\n");
-	LPCTSTR lpFmt = _T("http://ptlogin2.qq.com/login?u=%s&p=%s&verifycode=%s\
-		&webqq_type=10&remember_uin=1&login2qq=1&aid=%s&u1=http%%3A%%2F%%2Fweb.qq.com\
-		%%2Floginproxy.html%%3Flogin2qq%%3D1%%26webqq_type%%3D10&h=1&ptredirect=0&ptlang\
-		=2052&from_ui=1&pttype=1&dumy=&fp=loginerroralert&action=1-8-4593&mibao_css=m_webqq&t=1&g=1");
+	LPCTSTR lpszReqHeaders = _T("Accept: */*\r\nReferer: https://ui.ptlogin2.qq.com/cgi-bin/login?daid=164&target=self&style=5&mibao_css=m_webqq&appid=1003903&enable_qlogin=0&no_verifyimg=1&s_url=http%3A%2F%2Fweb2.qq.com%2Floginproxy.html&f_url=loginerroralert&strong_login=1&login_state=10&t=20130723001\r\nAccept-Language: zh-cn\r\n");
+// 	LPCTSTR lpFmt = _T("https://ssl.ptlogin2.qq.com/login?u=%s&p=%s&verifycode=%s\
+// 		&webqq_type=10&remember_uin=1&login2qq=1&aid=%s&u1=http%%3A%%2F%%2Fweb.qq.com\
+// 		%%2Floginproxy.html%%3Flogin2qq%%3D1%%26webqq_type%%3D10&h=1&ptredirect=0&ptlang\
+// 		=2052&from_ui=1&pttype=1&dumy=&fp=loginerroralert&action=1-8-4593&mibao_css=m_webqq&t=1&g=1");
+	LPCTSTR lpFmt = _T("https://ssl.ptlogin2.qq.com/login?u=%s&p=%s&verifycode=%s\
+		&webqq_type=10&remember_uin=1&login2qq=1&aid=%s&u1=http%%3A%%2F%%2Fweb2.qq.com\
+		%%2Floginproxy.html%%3Flogin2qq%%3D1%%26webqq_type%%3D10&h=1&ptredirect=0&ptlang=2052\
+		&daid=164&from_ui=1&pttype=1&dumy=&fp=loginerroralert&action=3-13-11750&mibao_css=m_webqq\
+		&t=1&g=1&js_type=0&js_ver=10038&login_sig=P9011ArgB3ImUQV*BfKuftIu9o3lGeuIoBVBi*WjElOnOl2OzVIzg3gHjE0KJ9e3");
 	TCHAR szQQNum[32] = {0}, szQQPwd[32] = {0}, szVerifyCode[32] = {0};
 	TCHAR szPwdHash[64] = {0};
 	TCHAR szUrl[MAX_URL_LEN] = {0};
@@ -109,6 +114,19 @@ BOOL CQQProtocol::Login1(CHttpClient& HttpClient, LPCTSTR lpQQNum, LPCTSTR lpQQP
 	{
 		arrRespHeader.clear();
 		return FALSE;
+	}
+
+	arrRespHeader.clear();
+
+	if (0 == lpLoginResult1->m_nRetCode)	// µÇÂ¼³É¹¦
+	{
+		bRet = HttpGet(HttpClient, lpLoginResult1->m_strCheckSigUrl.c_str(), 
+			lpszReqHeaders, dwRespCode, &arrRespHeader, RespData);
+		if (!bRet || dwRespCode != 200)
+		{
+			arrRespHeader.clear();
+			return FALSE;
+		}
 	}
 
 	arrRespHeader.clear();
@@ -1414,6 +1432,7 @@ BOOL CQQProtocol::HttpReq(CHttpClient& HttpClient, LPCTSTR lpszUrl,
 	dwRespCode = 0;
 	if (arrRespHeader != NULL)
 		arrRespHeader->clear();
+	RespData.Release();
 
 	if (lpPostData != NULL && dwPostDataLen > 0)
 		nReqMethod = REQ_METHOD_POST;
@@ -1513,6 +1532,7 @@ BOOL CQQProtocol::HttpBigPost(CHttpClient& HttpClient, LPCTSTR lpszUrl,
 	dwRespCode = 0;
 	if (arrRespHeader != NULL)
 		arrRespHeader->clear();
+	RespData.Release();
 
 	if (NULL == lpPostData || dwPostDataLen <= 0)
 		return FALSE;
