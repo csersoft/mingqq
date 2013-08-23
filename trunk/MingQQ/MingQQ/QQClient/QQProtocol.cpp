@@ -1754,108 +1754,96 @@ BOOL CQQProtocol::CalcPwdHash(LPCTSTR lpQQPwd, LPCTSTR lpVerifyCode,
 	return TRUE;
 }
 
-//// 计算获取好友列表的hash参数
-//std::string CQQProtocol::CalcBuddyListHash(UINT nQQUin, const std::string &strPtWebQq)
-//{
-//	std::string a = strPtWebQq;
-//	a += "password error";
-//
-//	CHAR szQQUin[32] = {0};
-//	sprintf(szQQUin, "%u", nQQUin);
-//
-//	std::string s;
-//	while ( true )
-//	{
-//		if ( s.length() < a.length() )
-//		{
-//			s += szQQUin;
-//			if ( s.length() == a.length() )
-//				break;
-//		}
-//		else
-//		{
-//			s = s.substr(0, a.length());
-//			break;
-//		}
-//	}
-//
-//	std::string j;
-//	for ( int i = 0; i < (int)s.length(); ++i )
-//	{
-//		j.push_back(s[i] ^ a[i]);
-//	}
-//
-//	std::string key = "0123456789ABCDEF";
-//
-//	s.clear();
-//	for ( int i = 0; i < (int)a.length(); ++i )
-//	{
-//		s.push_back(key[j[i] >> 4 & 15]);
-//		s.push_back(key[j[i] & 15]);
-//	}
-//	return s;
-//}
-
-//// 计算获取好友列表的hash参数
-// std::string CQQProtocol::CalcBuddyListHash(UINT nQQUin, const std::string &strPtWebQq)
-// {
-// 	UINT buffer[4] = {0};
-// 	for (int i = 0; i < (int)strPtWebQq.size(); i++)
-// 		buffer[i % 4] ^= strPtWebQq[i];
-// 	UINT d[4] = {0};
-// 	d[0] = nQQUin >> 24 & 255 ^ 'E';
-// 	d[1] = nQQUin >> 16 & 255 ^ 'C';
-// 	d[2] = nQQUin >> 8 & 255 ^ 'O';
-// 	d[3] = nQQUin & 255 ^ 'K';
-// 	UINT j2[8] = {0};
-// 	for (int i = 0; i < 8; i++)
-// 		j2[i] = i % 2 == 0 ? buffer[i >> 1] : d[i >> 1];
-// 	char sb[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-// 	std::string str;
-// 	for (int s = 0; s < 8; s++)
-// 	{
-// 		str += sb[j2[s] >> 4 & 15];
-// 		str += sb[j2[s] & 15];
-// 	}
-// 	return str;
-// }
+struct _se_
+{
+	UINT s;
+	UINT e;
+};
 
 // 计算获取好友列表的hash参数
 std::string CQQProtocol::CalcBuddyListHash(UINT nQQUin, const std::string &strPtWebQq)
 {
-	char szQQUin[32] = {0};
-	sprintf(szQQUin, "%u", nQQUin);
+	UINT r[4] = {0};
+	r[0] = nQQUin >> 24 & 255;
+	r[1] = nQQUin >> 16 & 255;
+	r[2] = nQQUin >> 8 & 255;
+	r[3] = nQQUin & 255;
 
-	int nQQUinLen = strlen(szQQUin);
-	int nPtWebQqLen = (int)strPtWebQq.size();
+	std::vector<UINT> j;
+	for (int i = 0; i < strPtWebQq.size(); ++i)
+		j.push_back(strPtWebQq[i]);
 
-	UINT d = -1;
-	for (int j = 0, s = 0; s < nQQUinLen; s++)
+	_se_ b = {0, j.size()-1};
+
+	std::vector<_se_> e;
+	e.push_back(b);
+
+	while (e.size() > 0)
 	{
-		j += (szQQUin[s]-'0');
-		j %= nPtWebQqLen;
-		UINT c = 0;
-		if (j + 4 > nPtWebQqLen)
-			for (int l = 4 + j - nPtWebQqLen, x = 0; x < 4; x++)
-				c |= x < l ? (strPtWebQq[j + x] & 255) << (3 - x) * 8 : (strPtWebQq[x - l] & 255) << (3 - x) * 8;
-		else
-			for (int x = 0; x < 4; x++) 
-				c |= (strPtWebQq[j + x] & 255) << (3 - x) * 8; 
-		d ^= c;
+		_se_ c = e[e.size()-1];
+		e.pop_back();
+		if (!(c.s >= c.e || c.s < 0 || c.e >= j.size()))
+		{
+			if (c.s + 1 == c.e)
+			{
+				if (j[c.s] > j[c.e])
+				{
+					UINT l = j[c.s];
+					j[c.s] = j[c.e];
+					j[c.e] = l;
+				}
+			}
+			else
+			{
+				UINT k = c.e, l = c.s, f = j[c.s];
+				while (c.s < c.e)
+				{
+					while (c.s < c.e && j[c.e] >= f)
+					{
+						c.e--;
+						r[0] = r[0] + 3 & 255;
+					}
+
+					if (c.s < c.e)
+					{
+						j[c.s] = j[c.e];
+						c.s++;
+						r[1] = r[1] * 13 + 43 & 255;
+					}
+
+					while (c.s < c.e && j[c.s] <= f)
+					{
+						c.s++;
+						r[2] = r[2] - 3 & 255;
+					}
+
+					if (c.s < c.e)
+					{
+						j[c.e] = j[c.s];
+						c.e--;
+						r[3] = (r[0] ^ r[1] ^ r[2] ^ r[3] + 1) & 255;
+					}
+				}
+				j[c.s] = f;
+
+				b.s = l;
+				b.e = c.s - 1;
+				e.push_back(b);
+
+				b.s = c.s + 1;
+				b.e = k;
+				e.push_back(b);
+			}
+		}
 	}
 
-	UINT a[4] = {0};
-	a[0] = d >> 24 & 255;
-	a[1] = d >> 16 & 255;
-	a[2] = d >> 8 & 255;
-	a[3] = d & 255;
-
-	std::string strHash;
-	char szHexStr[] = "0123456789ABCDEF";
-	for (int j = 0; j < 4; j++)
+	char m[] = "0123456789ABCDEF";
+	std::string z;
+	for (int n = 0; n < sizeof(r)/sizeof(UINT); n++)
 	{
-		strHash += szHexStr[a[j] >> 4 & 15];
-		strHash += szHexStr[a[j] & 15];
+		z += m[r[n] >> 4 & 15];
+		z += m[r[n] & 15];
 	}
-	return strHash;
+	return z;
 }
+
