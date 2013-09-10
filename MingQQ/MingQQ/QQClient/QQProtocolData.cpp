@@ -1477,8 +1477,18 @@ BOOL CGroupInfoResult::Parse(CBuffer * lpBuf)
 					{
 						if (!JsonValue2[i]["nick"].isNull())
 						{
-							strValue = JsonValue2[i]["nick"].asString();
-							lpBuddyInfo->m_strNickName = Utf8ToUnicode(strValue);
+							// 一般情况下nick的json类型为字符串，当nick为qq号码时，json类型是数字
+							if (JsonValue2[i]["nick"].isString())
+							{
+								strValue = JsonValue2[i]["nick"].asString();
+								lpBuddyInfo->m_strNickName = Utf8ToUnicode(strValue);
+							}
+							else if (JsonValue2[i]["nick"].isUInt())
+							{
+								TCHAR cNick[128] = {0};
+								wsprintf(cNick, _T("%u"), JsonValue2[i]["nick"].asUInt());
+								lpBuddyInfo->m_strNickName = cNick;
+							}
 						}
 
 						if (!JsonValue2[i]["province"].isNull())
