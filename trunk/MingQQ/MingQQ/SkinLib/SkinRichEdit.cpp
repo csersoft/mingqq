@@ -42,6 +42,12 @@ EXTERN_C const IID IID_ITextServices = { // 8d33f740-cf58-11ce-a89d-00aa006cadc5
 	{0xa8, 0x9d, 0x00, 0xaa, 0x00, 0x6c, 0xad, 0xc5}
 };
 
+EXTERN_C const IID IID_ITextHost = { /* c5bdd8d0-d26e-11ce-a89e-00aa006cadc5 */
+	0xc5bdd8d0,
+	0xd26e,
+	0x11ce,
+	{0xa8, 0x9e, 0x00, 0xaa, 0x00, 0x6c, 0xad, 0xc5}
+};
 
 void GetSysParms(void)
 {
@@ -321,7 +327,21 @@ BOOL CTxtWinHost::Init(
 	SetDefaultInset();
 
 	// Create Text Services component
-	if(FAILED(CreateTextServices(NULL, this, &pUnk)))
+	PCreateTextServices TextServicesProc = NULL;
+
+	HMODULE hDll = ::LoadLibrary(_T("msftedit.dll"));
+	if (!hDll)
+		hDll = ::LoadLibrary(_T("Riched20.dll"));
+	if (!hDll)
+		hDll = ::LoadLibrary(_T("Riched32.dll"));
+	if (!hDll)
+		return FALSE;
+
+	TextServicesProc = (PCreateTextServices)::GetProcAddress(hDll, "CreateTextServices");
+	if (!TextServicesProc)
+		return FALSE;
+	
+	if(FAILED(TextServicesProc(NULL, this, &pUnk)))
 		return FALSE;
 
 	// Get text services interface

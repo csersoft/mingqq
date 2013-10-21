@@ -1,6 +1,26 @@
 #include "StdAfx.h"
 #include "TrayIcon.h"
 
+typedef struct _TBBUTTON32 {
+	int iBitmap;
+	int idCommand;
+	BYTE fsState;
+	BYTE fsStyle;
+	BYTE bReserved[2];          // padding for alignment
+	DWORD_PTR dwData;
+	INT_PTR iString;
+} TBBUTTON32;
+
+typedef struct _TBBUTTON64 {
+	int iBitmap;
+	int idCommand;
+	BYTE fsState;
+	BYTE fsStyle;
+	BYTE bReserved[6];          // padding for alignment
+	DWORD_PTR dwData;
+	INT_PTR iString;
+} TBBUTTON64;
+
 struct TRAYDATA  
 {  
 	HWND hwnd;                                 
@@ -9,6 +29,32 @@ struct TRAYDATA
 	DWORD Reserved[2];                 
 	HICON hIcon;                                 
 }; 
+
+// 判断操作系统类型是否是64位
+BOOL OSVerIs64Bit()
+{
+	BOOL bRet = FALSE;
+	HMODULE hDll;
+	SYSTEM_INFO si = {0};
+	typedef VOID(__stdcall*GETNATIVESYSTEMINFO)(LPSYSTEM_INFO lpSystemInfo);
+	GETNATIVESYSTEMINFO fnGetNativeSystemInfo;
+
+	hDll = ::GetModuleHandle(_T("kernel32.dll"));
+	if (NULL == hDll)
+		return bRet;
+
+	fnGetNativeSystemInfo = (GETNATIVESYSTEMINFO)::GetProcAddress(hDll, "GetNativeSystemInfo");
+	if (fnGetNativeSystemInfo != NULL)
+	{
+		fnGetNativeSystemInfo(&si);
+		if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 
+			|| si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64 )
+		{
+			bRet = TRUE;
+		}
+	}
+	return bRet;
+}
 
 CTrayIcon::CTrayIcon(void)
 {
@@ -153,12 +199,24 @@ BOOL CTrayIcon::EnumNotifyWindow(HWND hWnd, RECT &rect)
 		for (int i = 0; i < nButtons; i++)
 		{
 			RECT rc = {0}; 
-			TBBUTTON stButton = {0};
+			TBBUTTON32 stButton32 = {0};
+			TBBUTTON64 stButton64 = {0};
 			TRAYDATA stTrayData = {0};
+			BOOL bRet;
 
 			::SendMessage(hWnd, TB_GETBUTTON, i, (LPARAM)lpBuffer);	// 获取第i个托盘图标信息
-			BOOL bRet = ::ReadProcessMemory(hProcess, lpBuffer, &stButton, sizeof(TBBUTTON), 0);
-			bRet = ::ReadProcessMemory(hProcess, (LPVOID)stButton.dwData, &stTrayData, sizeof(TRAYDATA), 0);
+
+			if (!OSVerIs64Bit())	// 32位操作系统
+			{
+				bRet = ::ReadProcessMemory(hProcess, lpBuffer, &stButton32, sizeof(TBBUTTON32), 0);
+				bRet = ::ReadProcessMemory(hProcess, (LPVOID)stButton32.dwData, &stTrayData, sizeof(TRAYDATA), 0);
+			}
+			else					// 64位操作系统
+			{
+				bRet = ::ReadProcessMemory(hProcess, lpBuffer, &stButton64, sizeof(TBBUTTON64), 0);
+				bRet = ::ReadProcessMemory(hProcess, (LPVOID)stButton64.dwData, &stTrayData, sizeof(TRAYDATA), 0);
+			}
+			
 			if (bRet != 0 && stTrayData.hwnd == m_stNotifyIconData.hWnd)
 			{
 				::SendMessage(hWnd, TB_GETITEMRECT, (WPARAM)i, (LPARAM)lpBuffer); // 获取第i个托盘图标区域
@@ -209,3 +267,4 @@ HWND CTrayIcon::FindNotifyIconOverflowWindow()
 		hWnd = ::FindWindowEx(hWnd, NULL, _T("ToolbarWindow32"), NULL);
 	return hWnd;
 }
+
