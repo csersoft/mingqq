@@ -445,36 +445,13 @@ BOOL CSendMsgTask::CreateMsgContent(LPCTSTR lpMsg, std::vector<CContent *>& arrC
 	return TRUE;
 }
 
-// 上传好友聊天图片
-BOOL CSendMsgTask::UploadBuddyChatPic(LPCTSTR lpszFileName, CUploadBuddyChatPicResult& result)
+// 上传自定义表情
+BOOL CSendMsgTask::UploadCustomFace(LPCTSTR lpszFileName, CUploadCustomFaceResult& result)
 {
-	UINT& nQQUin = m_lpQQUser->m_nQQUin;
-	tstring& strSKey = m_lpQQUser->m_LoginResult1.m_strSKey;
-	tstring& strVfWebQq = m_lpQQUser->m_LoginResult2.m_strVfWebQq;
-	tstring& strPSessionId = m_lpQQUser->m_LoginResult2.m_strPSessionId;
-
-	BOOL bRet = m_lpQQProtocol->UploadBuddyChatPic(m_HttpClient, nQQUin, 
-		strSKey.c_str(), lpszFileName, strVfWebQq.c_str(), &result);
-	if (!bRet || (result.m_nRetCode != 0))
-		return FALSE;
-
-	CApplyBuddyChatPicResult result2;
-	bRet = m_lpQQProtocol->ApplyBuddyChatPic(m_HttpClient, nQQUin, 
-		result.m_strFilePath.c_str(), WEBQQ_CLIENT_ID, strPSessionId.c_str(), &result2);
-	if (!bRet || (result2.m_nRetCode != 0))
-		return FALSE;
-
-	return TRUE;
-}
-
-// 上传群聊天图片
-BOOL CSendMsgTask::UploadGroupChatPic(LPCTSTR lpszFileName, CUploadGroupChatPicResult& result)
-{
-	BOOL bRet = m_lpQQProtocol->UploadGroupChatPic(m_HttpClient, lpszFileName, 
+	BOOL bRet = m_lpQQProtocol->UploadCustomFace(m_HttpClient, lpszFileName, 
 		m_lpQQUser->m_LoginResult2.m_strVfWebQq.c_str(), &result);
 	if (!bRet || (result.m_nRetCode != 0 && result.m_nRetCode != 4))
 		return FALSE;
-
 	return TRUE;
 }
 
@@ -486,7 +463,7 @@ BOOL CSendMsgTask::SendBuddyMsg(CMsgItem * lpMsgItem)
 
 	CBuddyMessage * lpMsg = (CBuddyMessage *)lpMsgItem->m_lpMsg;
 	std::vector<CContent *>& arrContent = lpMsg->m_arrContent;
-	CUploadBuddyChatPicResult uploadPicResult;
+	CUploadCustomFaceResult uploadCFaceResult;
 	CSendBuddyMsgResult sendMsgResult;
 	int nRetry = 3;		// 重试次数
 	BOOL bRet;
@@ -498,17 +475,15 @@ BOOL CSendMsgTask::SendBuddyMsg(CMsgItem * lpMsgItem)
 		{
 			for (int j = 0; j < nRetry; j++)
 			{
-				bRet = UploadBuddyChatPic(lpContent->m_CFaceInfo.m_strName.c_str(), uploadPicResult);
-				if (bRet)
+				bRet = UploadCustomFace(lpContent->m_CFaceInfo.m_strName.c_str(), uploadCFaceResult);
+				if (bRet)	// 上传成功
 					break;
 			}
 
 			if (!bRet)
 				return FALSE;
 
-			lpContent->m_CFaceInfo.m_dwFileSize = uploadPicResult.m_dwFileSize;
-			lpContent->m_CFaceInfo.m_strFileName = uploadPicResult.m_strFileName;
-			lpContent->m_CFaceInfo.m_strFilePath = uploadPicResult.m_strFilePath;
+			lpContent->m_CFaceInfo.m_strRemoteFileName = uploadCFaceResult.m_strRemoteFileName;
 		}
 	}
 
@@ -530,7 +505,7 @@ BOOL CSendMsgTask::SendGroupMsg(CMsgItem * lpMsgItem)
 
 	CGroupMessage * lpMsg = (CGroupMessage *)lpMsgItem->m_lpMsg;
 	std::vector<CContent *>& arrContent = lpMsg->m_arrContent;
-	CUploadGroupChatPicResult uploadPicResult;
+	CUploadCustomFaceResult uploadCFaceResult;
 	CGetGroupFaceSigResult sigResult;
 	CSendGroupMsgResult sendMsgResult;
 	BOOL bHasCustomFace = FALSE;
@@ -546,15 +521,15 @@ BOOL CSendMsgTask::SendGroupMsg(CMsgItem * lpMsgItem)
 
 			for (int j = 0; j < nRetry; j++)
 			{
-				bRet = UploadGroupChatPic(lpContent->m_CFaceInfo.m_strName.c_str(), uploadPicResult);
-				if (bRet)
+				bRet = UploadCustomFace(lpContent->m_CFaceInfo.m_strName.c_str(), uploadCFaceResult);
+				if (bRet)	// 上传成功
 					break;
 			}
 
 			if (!bRet)
 				return FALSE;
 
-			lpContent->m_CFaceInfo.m_strFilePath = uploadPicResult.m_strFilePath;
+			lpContent->m_CFaceInfo.m_strRemoteFileName = uploadCFaceResult.m_strRemoteFileName;
 		}
 	}
 

@@ -72,13 +72,9 @@ public:
 		CGetC2CMsgSigResult * lpGetC2CMsgSigResult);
 	BOOL GetGroupFaceSignal(CHttpClient& HttpClient, LPCTSTR lpClientId,	// 获取群表情信令
 		LPCTSTR lpPSessionId, CGetGroupFaceSigResult * lpGetGroupFaceSigResult);
-	BOOL UploadBuddyChatPic(CHttpClient& HttpClient, UINT nQQUin,	// 上传好友离线聊天图片
-		LPCTSTR lpSKey, LPCTSTR lpFileName, LPCTSTR lpVfWebQq, CUploadBuddyChatPicResult * lpResult);
-	BOOL ApplyBuddyChatPic(CHttpClient& HttpClient, UINT nQQUin,	// 应用好友离线聊天图片
-		LPCTSTR lpFilePath, LPCTSTR lpClientId, LPCTSTR lpPSessionId, CApplyBuddyChatPicResult * lpResult);
-	BOOL UploadGroupChatPic(CHttpClient& HttpClient, LPCTSTR lpFileName, 
-		LPCTSTR lpVfWebQq, CUploadGroupChatPicResult * lpResult);	// 上传群聊天图片
-
+	BOOL UploadCustomFace(CHttpClient& HttpClient, LPCTSTR lpFileName,
+		LPCTSTR lpVfWebQq, CUploadCustomFaceResult * lpResult);		// 上传自定义表情
+	
 private:
 	BOOL HttpReq(CHttpClient& HttpClient, LPCTSTR lpszUrl, 
 		LPCTSTR lpszReqHeaders, const CHAR * lpPostData, DWORD dwPostDataLen, 

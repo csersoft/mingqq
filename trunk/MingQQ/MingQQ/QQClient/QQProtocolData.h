@@ -490,11 +490,11 @@ public:
 	tstring m_strGFaceSig;
 };
 
-class CUploadBuddyChatPicResult
+class CUploadCustomFaceResult
 {
 public:
-	CUploadBuddyChatPicResult(void);
-	~CUploadBuddyChatPicResult(void);
+	CUploadCustomFaceResult(void);
+	~CUploadCustomFaceResult(void);
 
 public:
 	void Reset();
@@ -502,41 +502,7 @@ public:
 
 public:
 	int m_nRetCode;
-	DWORD m_dwFileSize;
-	tstring m_strFileName;
-	tstring m_strFilePath;
-};
-
-class CApplyBuddyChatPicResult
-{
-public:
-	CApplyBuddyChatPicResult(void);
-	~CApplyBuddyChatPicResult(void);
-
-public:
-	void Reset();
-	BOOL Parse(CBuffer * lpBuf);
-
-public:
-	int m_nRetCode;
-	tstring m_strUrl;
-	int m_nSuccess;
-	tstring m_strFilePath;
-};
-
-class CUploadGroupChatPicResult
-{
-public:
-	CUploadGroupChatPicResult(void);
-	~CUploadGroupChatPicResult(void);
-
-public:
-	void Reset();
-	BOOL Parse(CBuffer * lpBuf);
-
-public:
-	int m_nRetCode;
-	tstring m_strFilePath;
+	tstring m_strRemoteFileName;
 };
 
 class CBuddyInfo			// 好友信息
@@ -771,18 +737,16 @@ public:
 class CCustomFaceInfo		// 自定义表情信息
 {
 public:
-	CCustomFaceInfo(void) : m_nFileId(0),m_dwFileSize(0){}
+	CCustomFaceInfo(void) : m_nFileId(0){}
 	~CCustomFaceInfo(void){}
 
 public:
-	tstring m_strName;			// 接收自定义表情使用参数
+	tstring m_strName;				// 接收自定义表情使用参数
 	UINT m_nFileId;
 	tstring m_strKey;
 	tstring m_strServer;
 
-	DWORD m_dwFileSize;			// 发送自定义表情使用参数
-	tstring m_strFileName;
-	tstring m_strFilePath;
+	tstring m_strRemoteFileName;	// 发送自定义表情使用参数
 };
 
 class CContent				// 消息内容
