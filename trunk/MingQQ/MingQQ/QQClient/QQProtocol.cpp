@@ -986,7 +986,7 @@ BOOL CQQProtocol::GetBuddyChatPic(CHttpClient& HttpClient, UINT nMsgId,
 	wsprintf(szUrl, lpFmt, nMsgId, lpFileName, nQQUin, lpClientId, lpPSessionId);
 
 	bRet = HttpGet(HttpClient, szUrl, lpszReqHeaders, dwRespCode, NULL, RespData);
-	if (!bRet || dwRespCode != 200)
+	if (!bRet || !(dwRespCode >= 200 && dwRespCode < 300))
 		return FALSE;
 
 	lpBuddyPic->Release();
@@ -1001,7 +1001,7 @@ BOOL CQQProtocol::GetBuddyChatPic(CHttpClient& HttpClient, UINT nMsgId,
 BOOL CQQProtocol::GetBuddyOffChatPic(CHttpClient& HttpClient, LPCTSTR lpFileName, UINT nQQUin, 
 									 LPCTSTR lpClientId, LPCTSTR lpPSessionId, CBuffer * lpBuddyPic)
 {
-	LPCTSTR lpszReqHeaders = _T("Accept: */*\r\nReferer: http://web.qq.com/?ADTAG=DESKTOP\r\nAccept-Language: zh-cn\r\n");
+	LPCTSTR lpszReqHeaders = _T("Accept: */*\r\nReferer: http://web.qq.com/?ADTAG=DESKTOP\r\nAccept-Language: zh-cn\r\nAccept-Encoding: gzip, deflate\r\n");
 	LPCTSTR lpFmt = _T("http://d.web2.qq.com/channel/get_offpic2?file_path=%s&f_uin=%u&clientid=%s&psessionid=%s");
 	TCHAR szUrl[MAX_URL_LEN] = {0};
 	DWORD dwRespCode;
@@ -1015,7 +1015,7 @@ BOOL CQQProtocol::GetBuddyOffChatPic(CHttpClient& HttpClient, LPCTSTR lpFileName
 	wsprintf(szUrl, lpFmt, lpFileName, nQQUin, lpClientId, lpPSessionId);
 
 	bRet = HttpGet(HttpClient, szUrl, lpszReqHeaders, dwRespCode, NULL, RespData);
-	if (!bRet || dwRespCode != 200)
+	if (!bRet || !(dwRespCode >= 200 && dwRespCode < 300))
 		return FALSE;
 
 	lpBuddyPic->Release();
@@ -1031,7 +1031,7 @@ BOOL CQQProtocol::GetGroupChatPic(CHttpClient& HttpClient, UINT nGroupId,
 								  UINT nQQUin, LPCTSTR lpServer, int nPort, UINT nFileId, 
 								  LPCTSTR lpFileName, LPCTSTR lpVfWebQq, CBuffer * lpGroupPic)
 {
-	LPCTSTR lpszReqHeaders = _T("Accept: */*\r\nReferer: http://web.qq.com/?ADTAG=DESKTOP\r\nAccept-Language: zh-cn\r\n");
+	LPCTSTR lpszReqHeaders = _T("Accept: */*\r\nReferer: http://web.qq.com/?ADTAG=DESKTOP\r\nAccept-Language: zh-cn\r\nAccept-Encoding: gzip, deflate\r\n");
 	LPCTSTR lpFmt = _T("http://web.qq.com/cgi-bin/get_group_pic?type=0&gid=%u&uin=%u&rip=%s&rport=%d&fid=%u&pic=%s&vfwebqq=%s&t=%u");
 	TCHAR szUrl[MAX_URL_LEN] = {0};
 	DWORD dwRespCode;
@@ -1046,7 +1046,7 @@ BOOL CQQProtocol::GetGroupChatPic(CHttpClient& HttpClient, UINT nGroupId,
 		lpServer, nPort, nFileId, lpFileName, lpVfWebQq);
 
 	bRet = HttpGet(HttpClient, szUrl, lpszReqHeaders, dwRespCode, NULL, RespData);
-	if (!bRet || dwRespCode != 200)
+	if (!bRet || !(dwRespCode >= 200 && dwRespCode < 300))
 		return FALSE;
 
 	lpGroupPic->Release();
@@ -1266,11 +1266,6 @@ BOOL CQQProtocol::HttpReq(CHttpClient& HttpClient, LPCTSTR lpszUrl,
 	}
 
 	dwRespCode = HttpClient.GetRespCode();
-	if (dwRespCode != 200)
-	{
-		HttpClient.CloseRequest();
-		return FALSE;
-	}
 
 	do
 	{
