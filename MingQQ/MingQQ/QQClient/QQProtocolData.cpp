@@ -1865,24 +1865,22 @@ BOOL CGetGroupFaceSigResult::Parse(CBuffer * lpBuf)
 	return TRUE;
 }
 
-CUploadBuddyChatPicResult::CUploadBuddyChatPicResult(void)
+CUploadCustomFaceResult::CUploadCustomFaceResult(void)
 {
 	Reset();
 }
 
-CUploadBuddyChatPicResult::~CUploadBuddyChatPicResult(void)
+CUploadCustomFaceResult::~CUploadCustomFaceResult(void)
 {
 }
 
-void CUploadBuddyChatPicResult::Reset()
+void CUploadCustomFaceResult::Reset()
 {
 	m_nRetCode = 0;
-	m_dwFileSize = 0;
-	m_strFileName = _T("");
-	m_strFilePath = _T("");
+	m_strRemoteFileName = _T("");
 }
 
-BOOL CUploadBuddyChatPicResult::Parse(CBuffer * lpBuf)
+BOOL CUploadCustomFaceResult::Parse(CBuffer * lpBuf)
 {
 	Json::Reader JsonReader;
 	Json::Value JsonValue;
@@ -1893,129 +1891,7 @@ BOOL CUploadBuddyChatPicResult::Parse(CBuffer * lpBuf)
 
 	Reset();
 
-	const CHAR * lpStart = "parent.EQQ.Model.ChatMsg.callbackSendPic(";
-	const CHAR * lpEnd = ");</script></head>";
-
-	strText = (const CHAR *)lpBuf->GetData();
-	std::string::size_type nPos = strText.find(lpStart);
-	if (nPos == tstring::npos)
-		return FALSE;
-	nPos += strlen(lpStart);
-	std::string::size_type nPos2 = strText.find(lpEnd, nPos);
-	if (nPos2 == tstring::npos)
-		return FALSE;
-	strText = strText.substr(nPos, nPos2-nPos);
-
-	Replace(strText, "'", "\"");
-	if (JsonReader.parse(strText, JsonValue))
-	{
-		if (!JsonValue["retcode"].isNull())
-			m_nRetCode = JsonValue["retcode"].asInt();
-
-		if (!JsonValue["filesize"].isNull())
-			m_dwFileSize = JsonValue["filesize"].asUInt();
-
-		if (!JsonValue["filename"].isNull())
-		{
-			strValue = JsonValue["filename"].asString();
-			m_strFileName = Utf8ToUnicode(strValue);
-		}
-
-		if (!JsonValue["filepath"].isNull())
-		{
-			strValue = JsonValue["filepath"].asString();
-			m_strFilePath = Utf8ToUnicode(strValue);
-		}
-	}
-
-	return TRUE;
-}
-
-CApplyBuddyChatPicResult::CApplyBuddyChatPicResult(void)
-{
-	Reset();
-}
-
-CApplyBuddyChatPicResult::~CApplyBuddyChatPicResult(void)
-{
-}
-
-void CApplyBuddyChatPicResult::Reset()
-{
-	m_nRetCode = 0;
-	m_strUrl = _T("");
-	m_nSuccess = 0;
-	m_strFilePath = _T("");
-}
-
-BOOL CApplyBuddyChatPicResult::Parse(CBuffer * lpBuf)
-{
-	Json::Reader JsonReader;
-	Json::Value JsonValue;
-	std::string strText, strValue;
-
-	if (NULL == lpBuf || lpBuf->GetData() == NULL || lpBuf->GetSize() <= 0)
-		return FALSE;
-
-	Reset();
-
-	strText = (const CHAR *)lpBuf->GetData();
-	if (JsonReader.parse(strText, JsonValue))
-	{
-		if (!JsonValue["retcode"].isNull())
-			m_nRetCode = JsonValue["retcode"].asInt();
-
-		if (!JsonValue["result"].isNull())
-		{
-			JsonValue = JsonValue["result"];
-
-			if (!JsonValue["url"].isNull())
-			{
-				strValue = JsonValue["url"].asString();
-				m_strUrl = Utf8ToUnicode(strValue);
-			}
-
-			if (!JsonValue["success"].isNull())
-				m_nSuccess = JsonValue["success"].asInt();
-
-			if (!JsonValue["file_path"].isNull())
-			{
-				strValue = JsonValue["file_path"].asString();
-				m_strFilePath = Utf8ToUnicode(strValue);
-			}
-		}
-	}
-
-	return TRUE;
-}
-
-CUploadGroupChatPicResult::CUploadGroupChatPicResult(void)
-{
-	Reset();
-}
-
-CUploadGroupChatPicResult::~CUploadGroupChatPicResult(void)
-{
-}
-
-void CUploadGroupChatPicResult::Reset()
-{
-	m_nRetCode = 0;
-	m_strFilePath = _T("");
-}
-
-BOOL CUploadGroupChatPicResult::Parse(CBuffer * lpBuf)
-{
-	Json::Reader JsonReader;
-	Json::Value JsonValue;
-	std::string strText, strValue;
-
-	if (NULL == lpBuf || lpBuf->GetData() == NULL || lpBuf->GetSize() <= 0)
-		return FALSE;
-
-	Reset();
-
-	const CHAR * lpStart = "parent.EQQ.Model.ChatMsg.callbackSendPicGroup(";
+	const CHAR * lpStart = "parent.EQQ.View.ChatBox.uploadCustomFaceCallback(";
 	const CHAR * lpEnd = ");</script></head>";
 
 	strText = (const CHAR *)lpBuf->GetData();
@@ -2043,7 +1919,7 @@ BOOL CUploadGroupChatPicResult::Parse(CBuffer * lpBuf)
 				if (nPos != tstring::npos)
 					strValue = strValue.substr(0, nPos);
 			}
-			m_strFilePath = Utf8ToUnicode(strValue);
+			m_strRemoteFileName = Utf8ToUnicode(strValue);
 		}
 	}
 

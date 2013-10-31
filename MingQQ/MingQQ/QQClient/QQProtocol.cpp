@@ -654,10 +654,8 @@ BOOL CQQProtocol::SendBuddyMsg(CHttpClient& HttpClient, CBuddyMessage * lpBuddyM
 			else if (lpContent->m_nType == CONTENT_TYPE_CUSTOM_FACE)
 			{
 				memset(cBuf, 0, sizeof(cBuf));
-				wsprintf(cBuf, _T("[\\\"offpic\\\",\\\"%s\\\",\\\"%s\\\",%u],"), 
-					lpContent->m_CFaceInfo.m_strFilePath.c_str(),
-					lpContent->m_CFaceInfo.m_strFileName.c_str(),
-					lpContent->m_CFaceInfo.m_dwFileSize);
+				wsprintf(cBuf, _T("[\\\"cface\\\",\\\"%s\\\"],"), 
+					lpContent->m_CFaceInfo.m_strRemoteFileName.c_str());
 				strContent += cBuf;
 			}
 		}
@@ -765,7 +763,7 @@ BOOL CQQProtocol::SendGroupMsg(CHttpClient& HttpClient, CGroupMessage * lpGroupM
 			{
 				bHasCustomFace = TRUE;
 				memset(cBuf, 0, sizeof(cBuf));
-				wsprintf(cBuf, _T("[\\\"cface\\\",\\\"group\\\",\\\"%s\\\"],"), lpContent->m_CFaceInfo.m_strFilePath.c_str());
+				wsprintf(cBuf, _T("[\\\"cface\\\",\\\"group\\\",\\\"%s\\\"],"), lpContent->m_CFaceInfo.m_strRemoteFileName.c_str());
 				strContent += cBuf;
 			}
 		}
@@ -1156,177 +1154,11 @@ BOOL CQQProtocol::GetGroupFaceSignal(CHttpClient& HttpClient, LPCTSTR lpClientId
 	return TRUE;
 }
 
-// 上传好友离线聊天图片
-BOOL CQQProtocol::UploadBuddyChatPic(CHttpClient& HttpClient, UINT nQQUin, 
-									 LPCTSTR lpSKey, LPCTSTR lpFileName, 
-									 LPCTSTR lpVfWebQq, CUploadBuddyChatPicResult * lpResult)
+// 上传自定义表情
+BOOL CQQProtocol::UploadCustomFace(CHttpClient& HttpClient, LPCTSTR lpFileName,
+								   LPCTSTR lpVfWebQq, CUploadCustomFaceResult * lpResult)
 {
-	LPCTSTR lpFmt = _T("http://weboffline.ftn.qq.com/ftn_access/upload_offline_pic?time=%u");
- 	TCHAR szUrl[MAX_URL_LEN] = {0};
- 	DWORD dwRespCode;
- 	CBuffer RespData;
- 	BOOL bRet;
- 
- 	if (NULL == lpSKey || NULL == lpFileName || NULL == *lpFileName 
-		|| NULL == lpVfWebQq || NULL == lpResult)
- 		return FALSE;
- 
-	CHAR * lpImageData = NULL;
-	LONG lImageSize = 0;
-	bRet = File_ReadAll(lpFileName, &lpImageData, &lImageSize);
-	if (!bRet)
-		return FALSE;
-
-	// 构建Http请求Url
-	time_t t;
-	t = time(NULL);
-
-	wsprintf(szUrl, lpFmt, t);
-
-	// 构建Http请求体的Post数据
-	std::string strBoundary = "----WebKitFormBoundarygomvAbMHe1VA6guI";
-	std::string strBoundary2 = "--" + strBoundary + "\r\n";
-	std::string strSKey = UnicodeToUtf8(tstring(lpSKey));
-	std::string strVfWebQq = UnicodeToUtf8(tstring(lpVfWebQq));
-	std::string strFileName = UnicodeToUtf8(ZYM::CPath::GetFileName(lpFileName));
-	std::string strMimeType = UnicodeToUtf8(GetMimeTypeByExtension(ZYM::CPath::GetExtension(lpFileName).c_str()));
-
-	CHAR szQQUin[32] = {0};
-	sprintf(szQQUin, "%u", nQQUin);
-
-	CBuffer postData;
-
-	postData.Add(strBoundary2.c_str());
-	postData.Add("Content-Disposition: form-data; name=\"callback\"\r\n\r\n");
-	postData.Add("parent.EQQ.Model.ChatMsg.callbackSendPic\r\n");
-
-	postData.Add(strBoundary2.c_str());
-	postData.Add("Content-Disposition: form-data; name=\"locallangid\"\r\n\r\n");
-	postData.Add("2052\r\n");
-
-	postData.Add(strBoundary2.c_str());
-	postData.Add("Content-Disposition: form-data; name=\"clientversion\"\r\n\r\n");
-	postData.Add("1409\r\n");
-
-	postData.Add(strBoundary2.c_str());
-	postData.Add("Content-Disposition: form-data; name=\"uin\"\r\n\r\n");
-	postData.Add(szQQUin);
-	postData.Add("\r\n");
-
-	postData.Add(strBoundary2.c_str());
-	postData.Add("Content-Disposition: form-data; name=\"skey\"\r\n\r\n");
-	postData.Add(strSKey.c_str());
-	postData.Add("\r\n");
-
-	postData.Add(strBoundary2.c_str());
-	postData.Add("Content-Disposition: form-data; name=\"appid\"\r\n\r\n");
-	postData.Add("1002101\r\n");
-
-	postData.Add(strBoundary2.c_str());
-	postData.Add("Content-Disposition: form-data; name=\"peeruin\"\r\n\r\n");
-	postData.Add("593023668\r\n");
-
-	postData.Add(strBoundary2.c_str());
-	postData.Add("Content-Disposition: form-data; name=\"file\"; filename=\"");
-	postData.Add(strFileName.c_str());
-	postData.Add("\"\r\n");
-
-	postData.Add("Content-Type: ");
-	postData.Add(strMimeType.c_str());
-	postData.Add("\r\n\r\n");
-
-	postData.Add((const BYTE *)lpImageData, lImageSize);
-	postData.Add("\r\n");
-
-	postData.Add(strBoundary2.c_str());
-	postData.Add("Content-Disposition: form-data; name=\"fileid\"\r\n\r\n");
-	postData.Add("1\r\n");
-
-	postData.Add(strBoundary2.c_str());
-	postData.Add("Content-Disposition: form-data; name=\"vfwebqq\"\r\n\r\n");
-	postData.Add(strVfWebQq.c_str());
-	postData.Add("\r\n");
-
-	postData.Add(strBoundary2.c_str());
-	postData.Add("Content-Disposition: form-data; name=\"senderviplevel\"\r\n\r\n");
-	postData.Add("0\r\n");
-
-	postData.Add(strBoundary2.c_str());
-	postData.Add("Content-Disposition: form-data; name=\"reciverviplevel\"\r\n\r\n");
-	postData.Add("0\r\n");
-
-	postData.Add("--");
-	postData.Add(strBoundary.c_str());
-	postData.Add("--\r\n\r\n");
-
-	// 构建Http请求头
-	TCHAR cContentLength[256] = {0};
-	wsprintf(cContentLength, _T("Content-Length: %u\r\n"), postData.GetSize());
-
-	TCHAR cContentType[256] = {0};
-	wsprintf(cContentType, _T("Content-Type: multipart/form-data; boundary=%s\r\n"), _T("----WebKitFormBoundarygomvAbMHe1VA6guI"));
-
-	tstring strReqHeaders;
-	strReqHeaders = _T("Connection: keep-alive\r\n");
-	strReqHeaders += cContentLength;
-	strReqHeaders += _T("Cache-Control: max-age=0\r\n");
-	strReqHeaders += _T("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n");
-	strReqHeaders += _T("Origin: http://web.qq.com\r\n");
-	strReqHeaders += cContentType;
-	strReqHeaders += _T("Referer: http://web.qq.com/\r\n");
-	strReqHeaders += _T("Accept-Encoding: gzip,deflate,sdch\r\n");
-	strReqHeaders += _T("Accept-Language: zh-CN,zh;q=0.8\r\n");
-	strReqHeaders += _T("Accept-Charset: GBK,utf-8;q=0.7,*;q=0.3\r\n");
- 
- 	bRet = HttpBigPost(HttpClient, szUrl, strReqHeaders.c_str(),
-		(const CHAR *)postData.GetData(), postData.GetSize(), dwRespCode, NULL, RespData);
- 	if (!bRet || dwRespCode != 200)
- 		return FALSE;
- 
- 	bRet = lpResult->Parse(&RespData);
- 	if (!bRet)
- 		return FALSE;
-
-	return TRUE;
-}
-
-// 应用好友离线聊天图片
-BOOL CQQProtocol::ApplyBuddyChatPic(CHttpClient& HttpClient, UINT nQQUin, 
-									LPCTSTR lpFilePath, LPCTSTR lpClientId, 
-									LPCTSTR lpPSessionId, CApplyBuddyChatPicResult * lpResult)
-{
-	LPCTSTR lpszReqHeaders = _T("Connection: keep-alive\r\nContent-Type: utf-8\r\nAccept: */*\r\nReferer: http://d.web2.qq.com/proxy.html?v=20110331002&callback=1&id=2\r\nAccept-Encoding: gzip,deflate,sdch\r\nAccept-Language: zh-CN,zh;q=0.8\r\nAccept-Charset: GBK,utf-8;q=0.7,*;q=0.3\r\n");
-	LPCTSTR lpFmt = _T("http://d.web2.qq.com/channel/apply_offline_pic_dl2?f_uin=%u&file_path=%s&clientid=%s&psessionid=%s&t=%u");
-	TCHAR szUrl[MAX_URL_LEN] = {0};
-	DWORD dwRespCode;
-	CBuffer RespData;
-	BOOL bRet;
-
-	if (NULL == lpFilePath || NULL == lpClientId || NULL == lpPSessionId || NULL == lpResult)
-		return FALSE;
-
-	time_t t;
-	t = time(NULL);
-
-	wsprintf(szUrl, lpFmt, nQQUin, lpFilePath, lpClientId, lpPSessionId, t);
-
-	bRet = HttpGet(HttpClient, szUrl, lpszReqHeaders, dwRespCode, NULL, RespData);
-	if (!bRet || dwRespCode != 200)
-		return FALSE;
-
-	bRet = lpResult->Parse(&RespData);
-	if (!bRet)
-		return FALSE;
-
-	return TRUE;
-}
-
-// 上传群聊天图片
-BOOL CQQProtocol::UploadGroupChatPic(CHttpClient& HttpClient, LPCTSTR lpFileName, 
-									 LPCTSTR lpVfWebQq, CUploadGroupChatPicResult * lpResult)
-{
-	LPCTSTR lpFmt = _T("http://up.web2.qq.com/cgi-bin/cface_upload?time=%u");
- 	TCHAR szUrl[MAX_URL_LEN] = {0};
+	LPCTSTR lpszUrl = _T("http://up.web2.qq.com/cgi-bin/cface_upload");
  	DWORD dwRespCode;
  	CBuffer RespData;
  	BOOL bRet;
@@ -1340,12 +1172,6 @@ BOOL CQQProtocol::UploadGroupChatPic(CHttpClient& HttpClient, LPCTSTR lpFileName
 	if (!bRet)
 		return FALSE;
 
-	// 构建Http请求Url
-	time_t t;
-	t = time(NULL);
-
-	wsprintf(szUrl, lpFmt, t);
-
 	// 构建Http请求体的Post数据
 	std::string strBoundary = "----WebKitFormBoundarygomvAbMHe1VA6guI";
 	std::string strBoundary2 = "--" + strBoundary + "\r\n";
@@ -1354,19 +1180,6 @@ BOOL CQQProtocol::UploadGroupChatPic(CHttpClient& HttpClient, LPCTSTR lpFileName
 	std::string strMimeType = UnicodeToUtf8(GetMimeTypeByExtension(ZYM::CPath::GetExtension(lpFileName).c_str()));
 
 	CBuffer postData;
-
-	postData.Add(strBoundary2.c_str());
-	postData.Add("Content-Disposition: form-data; name=\"from\"\r\n\r\n");
-	postData.Add("control\r\n");
-
-	postData.Add(strBoundary2.c_str());
-	postData.Add("Content-Disposition: form-data; name=\"f\"\r\n\r\n");
-	postData.Add("EQQ.Model.ChatMsg.callbackSendPicGroup\r\n");
-
-	postData.Add(strBoundary2.c_str());
-	postData.Add("Content-Disposition: form-data; name=\"vfwebqq\"\r\n\r\n");
-	postData.Add(strVfWebQq.c_str());
-	postData.Add("\r\n");
 
 	postData.Add(strBoundary2.c_str());
 	postData.Add("Content-Disposition: form-data; name=\"custom_face\"; filename=\"");
@@ -1381,42 +1194,41 @@ BOOL CQQProtocol::UploadGroupChatPic(CHttpClient& HttpClient, LPCTSTR lpFileName
 	postData.Add("\r\n");
 
 	postData.Add(strBoundary2.c_str());
-	postData.Add("Content-Disposition: form-data; name=\"fileid\"\r\n\r\n");
-	postData.Add("1\r\n");
+	postData.Add("Content-Disposition: form-data; name=\"f\"\r\n\r\n");
+	postData.Add("EQQ.View.ChatBox.uploadCustomFaceCallback\r\n");
+
+	postData.Add(strBoundary2.c_str());
+	postData.Add("Content-Disposition: form-data; name=\"vfwebqq\"\r\n\r\n");
+	postData.Add(strVfWebQq.c_str());
+	postData.Add("\r\n");
 
 	postData.Add("--");
 	postData.Add(strBoundary.c_str());
 	postData.Add("--\r\n\r\n");
 
 	// 构建Http请求头
+	TCHAR cContentType[256] = {0};
+	wsprintf(cContentType, _T("Content-Type: multipart/form-data; boundary=%s\r\n"), _T("----WebKitFormBoundarygomvAbMHe1VA6guI"));
+
 	TCHAR cContentLength[256] = {0};
 	wsprintf(cContentLength, _T("Content-Length: %u\r\n"), postData.GetSize());
 
-	TCHAR cContentType[256] = {0};
-	wsprintf(cContentLength, _T("Content-Type: multipart/form-data; boundary=%s\r\n"), _T("----WebKitFormBoundarygomvAbMHe1VA6guI"));
-
 	tstring strReqHeaders;
-	strReqHeaders = _T("Connection: keep-alive\r\n");
-	strReqHeaders += cContentLength;
-	strReqHeaders += _T("Cache-Control: max-age=0\r\n");
-	strReqHeaders += _T("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n");
-	strReqHeaders += _T("Origin: http://web.qq.com\r\n");
+	strReqHeaders = _T("Accept: Accept: image/gif, image/jpeg, image/pjpeg, image/pjpeg, application/x-shockwave-flash, application/x-ms-application, application/x-ms-xbap, application/vnd.ms-xpsdocument, application/xaml+xml, */*\r\n");
+	strReqHeaders += _T("Referer: http://web2.qq.com/webqq.html\r\n");
+	strReqHeaders += _T("Accept-Language: zh-cn\r\n");
 	strReqHeaders += cContentType;
-	strReqHeaders += _T("Referer: http://web.qq.com/\r\n");
-	strReqHeaders += _T("Accept-Encoding: gzip,deflate,sdch\r\n");
-	strReqHeaders += _T("Accept-Language: zh-CN,zh;q=0.8\r\n");
-	strReqHeaders += _T("Accept-Charset: GBK,utf-8;q=0.7,*;q=0.3\r\n");
- 
- 	bRet = HttpBigPost(HttpClient, szUrl, strReqHeaders.c_str(),
+	strReqHeaders += _T("Accept-Encoding: gzip, deflate\r\n");
+	strReqHeaders += cContentLength;
+	strReqHeaders += _T("Connection: keep-alive\r\n");
+	strReqHeaders += _T("Cache-Control: no-cache\r\n");
+	
+ 	bRet = HttpBigPost(HttpClient, lpszUrl, strReqHeaders.c_str(),
 		(const CHAR *)postData.GetData(), postData.GetSize(), dwRespCode, NULL, RespData);
  	if (!bRet || dwRespCode != 200)
  		return FALSE;
  
- 	bRet = lpResult->Parse(&RespData);
- 	if (!bRet)
- 		return FALSE;
-
-	return TRUE;
+ 	return lpResult->Parse(&RespData);
 }
 
 BOOL CQQProtocol::HttpReq(CHttpClient& HttpClient, LPCTSTR lpszUrl, 

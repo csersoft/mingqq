@@ -51,8 +51,7 @@ private:
 	BOOL HandleSysFaceId(LPCTSTR& p, tstring& strText, std::vector<CContent *>& arrContent);
 	BOOL HandleCustomPic(LPCTSTR& p, tstring& strText, std::vector<CContent *>& arrContent);
 	BOOL CreateMsgContent(LPCTSTR lpMsg, std::vector<CContent *>& arrContent);
-	BOOL UploadBuddyChatPic(LPCTSTR lpszFileName, CUploadBuddyChatPicResult& result);	// 上传好友聊天图片
-	BOOL UploadGroupChatPic(LPCTSTR lpszFileName, CUploadGroupChatPicResult& result);	// 上传群聊天图片
+	BOOL UploadCustomFace(LPCTSTR lpszFileName, CUploadCustomFaceResult& result);		// 上传自定义表情
 	BOOL SendBuddyMsg(CMsgItem * lpMsgItem);	// 发送好友消息
 	BOOL SendGroupMsg(CMsgItem * lpMsgItem);	// 发送群消息
 	BOOL SendSessMsg(CMsgItem * lpMsgItem);		// 发送群成员消息
