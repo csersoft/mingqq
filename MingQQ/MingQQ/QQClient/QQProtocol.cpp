@@ -924,7 +924,7 @@ BOOL CQQProtocol::SendSessMsg(CHttpClient& HttpClient, CSessMessage * lpSessMsg,
  
  	bRet = HttpPost(HttpClient, lpszUrl, lpszReqHeaders, 
 		strPostData.c_str(), strPostData.size(),dwRespCode, NULL, RespData);
- 	if (!bRet || dwRespCode != 200)
+ 	if (!bRet || (dwRespCode < 200 || dwRespCode >= 400))
  		return FALSE;
  
  	bRet = lpSendSessMsgResult->Parse(&RespData);
@@ -936,10 +936,10 @@ BOOL CQQProtocol::SendSessMsg(CHttpClient& HttpClient, CSessMessage * lpSessMsg,
 
 // »ñÈ¡Í·ÏñÍ¼Æ¬
 BOOL CQQProtocol::GetHeadPic(CHttpClient& HttpClient, BOOL bIsBuddy,
-						  UINT nQQUin, LPCTSTR lpVfWebQq, CBuffer * lpFacePic)
+							 UINT nQQUin, LPCTSTR lpVfWebQq, CBuffer * lpFacePic)
 {
-	LPCTSTR lpszReqHeaders = _T("Accept: */*\r\nReferer: http://web.qq.com/?ADTAG=DESKTOP\r\nAccept-Language: zh-cn\r\n");
-	LPCTSTR lpFmt = _T("http://face%d.qun.qq.com/cgi/svr/face/getface?cache=0&type=%d&fid=0&uin=%u&vfwebqq=%s");
+	LPCTSTR lpszReqHeaders = _T("Accept: */*\r\nReferer: http://web2.qq.com/webqq.html\r\nAccept-Language: zh-cn\r\n");
+	LPCTSTR lpFmt = _T("http://face%d.web.qq.com/cgi/svr/face/getface?cache=0&type=%d&fid=0&uin=%u&vfwebqq=%s&t=%u");
 	TCHAR szUrl[MAX_URL_LEN] = {0};
 	DWORD dwRespCode;
 	CBuffer RespData;
@@ -948,15 +948,18 @@ BOOL CQQProtocol::GetHeadPic(CHttpClient& HttpClient, BOOL bIsBuddy,
 	if (NULL == lpVfWebQq || NULL == lpFacePic)
 		return FALSE;
 
-	int nType = bIsBuddy ? 1 : 4;
+	int nType = bIsBuddy ? 11 : 14;
 
 	srand((UINT)time(NULL));
 	int nRandom = rand() % 9 + 1;
 
-	wsprintf(szUrl, lpFmt, nRandom, nType, nQQUin, lpVfWebQq);
+	time_t t;
+	t = time(NULL);
+
+	wsprintf(szUrl, lpFmt, nRandom, nType, nQQUin, lpVfWebQq, t);
 
 	bRet = HttpGet(HttpClient, szUrl, lpszReqHeaders, dwRespCode, NULL, RespData);
-	if (!bRet || dwRespCode != 200)
+	if (!bRet || !(dwRespCode >= 200 && dwRespCode < 300))
 		return FALSE;
 
 	lpFacePic->Release();
