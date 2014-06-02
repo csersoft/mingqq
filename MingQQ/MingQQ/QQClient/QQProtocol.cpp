@@ -1573,24 +1573,87 @@ struct _se_
 // 计算获取好友列表的hash参数
 std::string CQQProtocol::CalcBuddyListHash(UINT nQQUin, const std::string &strPtWebQq)
 {
-	UINT a[4] = {0};
-	for (int s = 0; s < (int)strPtWebQq.size(); s++)
-		a[s%4] ^= strPtWebQq[s];
+	UINT r[4] = {0};
+	r[0] = nQQUin >> 24 & 255;
+	r[1] = nQQUin >> 16 & 255;
+	r[2] = nQQUin >> 8 & 255;
+	r[3] = nQQUin & 255;
 
-	char j[] = {'E', 'C', 'O', 'K'};
-	UINT d[4] = {0};
-	d[0] = nQQUin >> 24 & 255 ^ j[0];
-	d[1] = nQQUin >> 16 & 255 ^ j[1];
-	d[2] = nQQUin >> 8 & 255 ^ j[2];
-	d[3] = nQQUin & 255 ^ j[3];
+	std::vector<UINT> j;
+	for (int i = 0; i < strPtWebQq.size(); ++i)
+		j.push_back(strPtWebQq[i]);
 
-	UINT j2[8] = {0};
-	for (int s = 0; s < 8; s++)
-		j2[s] = (s % 2 == 0 ? a[s >> 1] : d[s >> 1]);
-	char a2[] = "0123456789ABCDEF";
-	std::string d2;
-	for (int s = 0; s < sizeof(j2)/sizeof(UINT); s++)
-		d2 += a2[j2[s]>>4&15], d2 += a2[j2[s]&15];
-	return d2;
+	_se_ b = {0, j.size()-1};
+
+	std::vector<_se_> e;
+	e.push_back(b);
+
+	while (e.size() > 0)
+	{
+		_se_ c = e[e.size()-1];
+		e.pop_back();
+		if (!(c.s >= c.e || c.s < 0 || c.e >= j.size()))
+		{
+			if (c.s + 1 == c.e)
+			{
+				if (j[c.s] > j[c.e])
+				{
+					UINT l = j[c.s];
+					j[c.s] = j[c.e];
+					j[c.e] = l;
+				}
+			}
+			else
+			{
+				UINT k = c.e, l = c.s, f = j[c.s];
+				while (c.s < c.e)
+				{
+					while (c.s < c.e && j[c.e] >= f)
+					{
+						c.e--;
+						r[0] = r[0] + 3 & 255;
+					}
+
+					if (c.s < c.e)
+					{
+						j[c.s] = j[c.e];
+						c.s++;
+						r[1] = r[1] * 13 + 43 & 255;
+					}
+
+					while (c.s < c.e && j[c.s] <= f)
+					{
+						c.s++;
+						r[2] = r[2] - 3 & 255;
+					}
+
+					if (c.s < c.e)
+					{
+						j[c.e] = j[c.s];
+						c.e--;
+						r[3] = (r[0] ^ r[1] ^ r[2] ^ r[3] + 1) & 255;
+					}
+				}
+				j[c.s] = f;
+
+				b.s = l;
+				b.e = c.s - 1;
+				e.push_back(b);
+
+				b.s = c.s + 1;
+				b.e = k;
+				e.push_back(b);
+			}
+		}
+	}
+
+	char m[] = "0123456789ABCDEF";
+	std::string z;
+	for (int n = 0; n < sizeof(r)/sizeof(UINT); n++)
+	{
+		z += m[r[n] >> 4 & 15];
+		z += m[r[n] & 15];
+	}
+	return z;
 }
 
