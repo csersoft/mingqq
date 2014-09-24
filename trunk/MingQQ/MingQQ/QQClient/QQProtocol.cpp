@@ -228,19 +228,13 @@ BOOL CQQProtocol::GetBuddyList(CHttpClient& HttpClient, UINT nQQUin,
 	if (NULL == lpPtWebQq || NULL == lpVfWebQq || NULL == lpResult)
 		return FALSE;
 
-	CHAR * lpText = UnicodeToUtf8(lpPtWebQq);
-	if (NULL == lpText)
-		return FALSE;
-	std::string strPtWebQq = lpText;
-	delete []lpText;
-
-	lpText = UnicodeToUtf8(lpVfWebQq);
+	CHAR * lpText = UnicodeToUtf8(lpVfWebQq);
 	if (NULL == lpText)
 		return FALSE;
 	std::string strVfWebQq = lpText;
 	delete []lpText;
 
-	std::string strHash = CalcBuddyListHash(nQQUin, strPtWebQq);
+	std::string strHash = CalcHash(nQQUin, lpPtWebQq);
 
 	std::string strPostData;
 
@@ -296,16 +290,12 @@ BOOL CQQProtocol::GetOnlineBuddyList(CHttpClient& HttpClient, LPCTSTR lpClientId
 }
 
 // 获取群列表
-BOOL CQQProtocol::GetGroupList(CHttpClient& HttpClient, LPCTSTR lpVfWebQq, CGroupListResult * lpResult)
+BOOL CQQProtocol::GetGroupList(CHttpClient& HttpClient, int nQQUin, 
+							   LPCTSTR lpPtWebQq, LPCTSTR lpVfWebQq, 
+							   CGroupListResult * lpResult)
 {
 	LPCTSTR lpszReqHeaders = _T("Accept: */*\r\nAccept-Language: zh-cn\r\nReferer: http://s.web2.qq.com/proxy.html?v=20110412001&callback=1&id=2\r\nContent-Type: application/x-www-form-urlencoded\r\n");
 	LPCTSTR lpszUrl = _T("http://s.web2.qq.com/api/get_group_name_list_mask2");
-	LPCTSTR lpFmt1 = _T("{\"vfwebqq\":\"%s\"}");
-	LPCSTR lpFmt2 = "r=%s";
-	TCHAR cRData[2048] = {0};
-	std::string strRData;
-	CHAR cPostData[4096] = {0};
-	int nPostDataLen;
 	DWORD dwRespCode;
 	CBuffer RespData;
 	BOOL bRet;
@@ -313,14 +303,27 @@ BOOL CQQProtocol::GetGroupList(CHttpClient& HttpClient, LPCTSTR lpVfWebQq, CGrou
 	if (NULL == lpVfWebQq || NULL == lpResult)
 		return FALSE;
 
-	wsprintf(cRData, lpFmt1, lpVfWebQq);
-	strRData = EncodeData(cRData, _tcslen(cRData));
+	CHAR * lpText = UnicodeToUtf8(lpVfWebQq);
+	if (NULL == lpText)
+		return FALSE;
+	std::string strVfWebQq = lpText;
+	delete []lpText;
 
-	sprintf(cPostData, lpFmt2, strRData.c_str());
-	nPostDataLen = strlen(cPostData);
+	std::string strHash = CalcHash(nQQUin, lpPtWebQq);
 
-	bRet = HttpPost(HttpClient, lpszUrl, lpszReqHeaders, cPostData, 
-		nPostDataLen, dwRespCode, NULL, RespData);
+	std::string strPostData;
+
+	strPostData = "{\"vfwebqq\":\"";
+	strPostData += strVfWebQq;
+	strPostData += "\",\"hash\":\"";
+	strPostData += strHash;
+	strPostData += "\"}";
+
+	strPostData = EncodeData(strPostData.c_str(), strPostData.size());
+	strPostData = "r=" + strPostData;
+
+	bRet = HttpPost(HttpClient, lpszUrl, lpszReqHeaders, 
+		strPostData.c_str(), strPostData.size(), dwRespCode, NULL, RespData);
 	if (!bRet || dwRespCode != 200)
 		return FALSE;
 
@@ -1564,95 +1567,37 @@ BOOL CQQProtocol::CalcPwdHash(LPCTSTR lpQQPwd, LPCTSTR lpVerifyCode,
 	return TRUE;
 }
 
-struct _se_
+// 计算获取好友/群列表的hash参数
+std::string CQQProtocol::CalcHash(UINT nQQUin, LPCTSTR lpPtWebQq)
 {
-	UINT s;
-	UINT e;
-};
+	CHAR cQQUin[256] = {0};
+	sprintf(cQQUin, "%u", nQQUin);
 
-// 计算获取好友列表的hash参数
-std::string CQQProtocol::CalcBuddyListHash(UINT nQQUin, const std::string &strPtWebQq)
-{
-	UINT r[4] = {0};
-	r[0] = nQQUin >> 24 & 255;
-	r[1] = nQQUin >> 16 & 255;
-	r[2] = nQQUin >> 8 & 255;
-	r[3] = nQQUin & 255;
+	CHAR * lpText = UnicodeToUtf8(lpPtWebQq);
+	if (NULL == lpText)
+		return "";
+	std::string strPtWebQq = lpText;
+	strPtWebQq += "password error";
+	delete []lpText;
 
-	std::vector<UINT> j;
-	for (int i = 0; i < strPtWebQq.size(); ++i)
-		j.push_back(strPtWebQq[i]);
+	std::string s;
+	for (int i = 0; i < (int)strPtWebQq.size(); i++)
+		s += cQQUin;
 
-	_se_ b = {0, j.size()-1};
+	std::string ss = s.substr(0, strPtWebQq.size());
 
-	std::vector<_se_> e;
-	e.push_back(b);
-
-	while (e.size() > 0)
+	CHAR * j = new CHAR[strPtWebQq.size()];
+	for (int i = 0; i < (int)strPtWebQq.size(); i++) 
 	{
-		_se_ c = e[e.size()-1];
-		e.pop_back();
-		if (!(c.s >= c.e || c.s < 0 || c.e >= j.size()))
-		{
-			if (c.s + 1 == c.e)
-			{
-				if (j[c.s] > j[c.e])
-				{
-					UINT l = j[c.s];
-					j[c.s] = j[c.e];
-					j[c.e] = l;
-				}
-			}
-			else
-			{
-				UINT k = c.e, l = c.s, f = j[c.s];
-				while (c.s < c.e)
-				{
-					while (c.s < c.e && j[c.e] >= f)
-					{
-						c.e--;
-						r[0] = r[0] + 3 & 255;
-					}
-
-					if (c.s < c.e)
-					{
-						j[c.s] = j[c.e];
-						c.s++;
-						r[1] = r[1] * 13 + 43 & 255;
-					}
-
-					while (c.s < c.e && j[c.s] <= f)
-					{
-						c.s++;
-						r[2] = r[2] - 3 & 255;
-					}
-
-					if (c.s < c.e)
-					{
-						j[c.e] = j[c.s];
-						c.e--;
-						r[3] = (r[0] ^ r[1] ^ r[2] ^ r[3] + 1) & 255;
-					}
-				}
-				j[c.s] = f;
-
-				b.s = l;
-				b.e = c.s - 1;
-				e.push_back(b);
-
-				b.s = c.s + 1;
-				b.e = k;
-				e.push_back(b);
-			}
-		}
+		j[i] = (CHAR)(ss[i] ^ strPtWebQq[i]);
 	}
-
+	
 	char m[] = "0123456789ABCDEF";
 	std::string z;
-	for (int n = 0; n < sizeof(r)/sizeof(UINT); n++)
+	for (int n = 0; n < (int)strPtWebQq.size(); n++)
 	{
-		z += m[r[n] >> 4 & 15];
-		z += m[r[n] & 15];
+		z += m[j[n] >> 4 & 15];
+		z += m[j[n] & 15];
 	}
 	return z;
 }

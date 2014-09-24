@@ -29,8 +29,8 @@ public:
 		LPCTSTR lpPtWebQq, LPCTSTR lpVfWebQq, CBuddyListResult * lpResult);
 	BOOL GetOnlineBuddyList(CHttpClient& HttpClient, LPCTSTR lpClientId,	// 获取在线好友列表
 		LPCTSTR lpPSessionId, COnlineBuddyListResult * lpResult);
-	BOOL GetGroupList(CHttpClient& HttpClient,						// 获取群列表
-		LPCTSTR lpVfWebQq, CGroupListResult * lpResult);
+	BOOL GetGroupList(CHttpClient& HttpClient, int nQQUin,			// 获取群列表
+		LPCTSTR lpPtWebQq, LPCTSTR lpVfWebQq, CGroupListResult * lpResult);
 	BOOL GetRecentList(CHttpClient& HttpClient, LPCTSTR lpVfWebQq,	// 获取最近联系人列表
 		LPCTSTR lpClientId, LPCTSTR lpPSessionId, CRecentListResult * lpResult);
 	BOOL Poll(CHttpClient& HttpClient, LPCTSTR lpClientId,			// 轮询消息
@@ -93,7 +93,7 @@ private:
 	std::string EncodeData(const WCHAR * lpData, int nLen);
 	std::wstring UnicodeToHexStr(const WCHAR * lpStr, BOOL bDblSlash);
 
-	BOOL CalcPwdHash(LPCTSTR lpQQPwd, LPCTSTR lpVerifyCode,						// 计算第一次登录的密码hash参数
+	BOOL CalcPwdHash(LPCTSTR lpQQPwd, LPCTSTR lpVerifyCode,	// 计算第一次登录的密码hash参数
 		const CHAR * lpPtUin, int nPtUinLen, TCHAR * lpPwdHash, int nLen);
-	std::string CalcBuddyListHash(UINT nQQUin, const std::string &strPtWebQq);	// 计算获取好友列表的hash参数
+	std::string CalcHash(UINT nQQUin, LPCTSTR lpPtWebQq);	// 计算获取好友/群列表的hash参数
 };

@@ -93,7 +93,7 @@ BOOL CFaceList::LoadConfigFile(LPCTSTR lpszFileName)
 
 CFaceInfo * CFaceList::GetFaceInfo(int nIndex)
 {
-	if (nIndex >= 0 && nIndex < (int)m_arrFaceInfo[nIndex])
+	if (nIndex >= 0 && nIndex < (int)m_arrFaceInfo.size())
 		return m_arrFaceInfo[nIndex];
 	else
 		return NULL;

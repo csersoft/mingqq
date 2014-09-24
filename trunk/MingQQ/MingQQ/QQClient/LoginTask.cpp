@@ -252,6 +252,7 @@ CGroupListResult * CLoginTask::GetGroupList()
 		return NULL;
 
 	BOOL bRet = m_lpQQProtocol->GetGroupList(m_HttpClient, 
+		m_lpQQUser->m_nQQUin, m_lpQQUser->m_LoginResult1.m_strPtWebQq.c_str(),
 		m_lpQQUser->m_LoginResult2.m_strVfWebQq.c_str(), lpGroupListResult);
 	if (!bRet || lpGroupListResult->m_nRetCode != 0 || m_bStop)
 	{

@@ -3,9 +3,9 @@
 #include <Windows.h>
 #include <string>
 #include <vector>
-#include "../SQLite 3.7.17/sqlite3.h"	// 使用sqlite3需要包含的头文件
+#include "../SQLite 3.8.6/include/sqlite3.h"	// 使用sqlite3需要包含的头文件
 
-#pragma comment(lib, "sqlite3.lib")
+#pragma comment(lib, "SQLite 3.8.6/lib/sqlite3.lib")
 
 #if defined(UNICODE) || defined(_UNICODE)
 	typedef std::wstring tstring;
